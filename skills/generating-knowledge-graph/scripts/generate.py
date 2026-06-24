@@ -30,11 +30,10 @@ def main(argv):
     ap.add_argument("--out", required=True)
     ap.add_argument("--report", required=True)
     a = ap.parse_args(argv)
-    manifest = json.loads(open(a.manifest, encoding="utf-8").read())
-    ont = yaml.safe_load(open(a.ontology, encoding="utf-8").read())
+    manifest = json.loads(pathlib.Path(a.manifest).read_text(encoding="utf-8"))
+    ont = yaml.safe_load(pathlib.Path(a.ontology).read_text(encoding="utf-8"))
     if a.cassette:
-        from llm_backend import LlmBackend
-        responses = json.loads(open(a.cassette, encoding="utf-8").read())
+        responses = json.loads(pathlib.Path(a.cassette).read_text(encoding="utf-8"))
         backend = LlmBackend(CassetteClient(responses), chunk_size=a.chunk_size, overlap=a.overlap)
     else:
         backend = BACKENDS[a.backend]()
