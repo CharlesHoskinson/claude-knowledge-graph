@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["nodes", "links"],
+  "properties": {
+    "directed": {"type": "boolean"},
+    "multigraph": {"type": "boolean"},
+    "graph": {"type": "object"},
+    "hyperedges": {"type": "array"},
+    "nodes": {"type": "array", "items": {
+      "type": "object", "required": ["id", "label"],
+      "properties": {"id": {"type": "string"}, "label": {"type": "string"},
+                     "source_file": {"type": "string"}, "source_location": {"type": "string"},
+                     "type": {"type": "string"}, "community": {"type": ["integer", "string", "null"]}}}},
+    "links": {"type": "array", "items": {
+      "type": "object", "required": ["source", "target", "relation"],
+      "properties": {"source": {"type": "string"}, "target": {"type": "string"},
+                     "relation": {"type": "string"}, "type": {"type": "string"},
+                     "source_file": {"type": "string"}, "source_location": {"type": "string"}}}}
+  }
+}
