@@ -45,3 +45,19 @@ def test_no_title_collision_data_loss(tmp_path):
     pages = list((out / "wiki" / "concepts").glob("*.md"))
     pages = [p for p in pages if p.stem != "_index"]
     assert len(pages) == len(snap["nodes"]), f"{len(pages)} pages != {len(snap['nodes'])} nodes (collision data loss)"
+
+def test_case_only_title_collision_disambiguated(tmp_path):
+    snap = {"snapshot_id": "s", "created_at": "2026-06-24T00:00:00Z",
+            "nodes": [
+                {"id": "a", "kind": "concept", "title": "Foo", "aliases": [], "description": "",
+                 "tags": [], "entity_kind": None, "source_ids": [], "source_location": ""},
+                {"id": "b", "kind": "concept", "title": "foo", "aliases": [], "description": "",
+                 "tags": [], "entity_kind": None, "source_ids": [], "source_location": ""}],
+            "edges": [], "sources": [], "communities": []}
+    led = ledger.build_ledger(snap, "led")
+    out = tmp_path / "wiki-root"
+    compiler.compile_wiki(snap, led, str(out), "2026-06-24")
+    pages = [p for p in (out / "wiki" / "concepts").glob("*.md") if p.stem != "_index"]
+    # both nodes must survive as DISTINCT files (case-insensitive stems must differ)
+    assert len(pages) == 2, [p.name for p in pages]
+    assert len({p.stem.lower() for p in pages}) == 2, [p.name for p in pages]

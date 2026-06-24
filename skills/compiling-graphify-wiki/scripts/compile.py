@@ -24,18 +24,21 @@ def _safe(title):
 def _unique_titles(pairs):
     """Return a stable id->unique_title map for a list of (id, raw_title) pairs.
 
-    If multiple ids share the same sanitized title, each is disambiguated as
-    '{safe_title} ({id})' so filenames remain unique and deterministic.
+    If multiple ids share the same sanitized title (compared case-insensitively,
+    matching llm-wiki's case-insensitive link resolution), each is disambiguated
+    as '{safe_title} ({id})' so filenames remain unique and deterministic on
+    case-insensitive filesystems (e.g. Windows).  The disambiguated titles keep
+    their original casing; only the collision-grouping key is lowercased.
     """
     from collections import defaultdict
-    safe_to_ids = defaultdict(list)
+    folded_to_ids = defaultdict(list)
     for nid, raw in pairs:
-        safe_to_ids[_safe(raw)].append(nid)
+        folded_to_ids[_safe(raw).lower()].append(nid)
 
     result = {}
     for nid, raw in pairs:
         safe = _safe(raw)
-        if len(safe_to_ids[safe]) == 1:
+        if len(folded_to_ids[safe.lower()]) == 1:
             result[nid] = safe
         else:
             result[nid] = _safe(f"{safe} ({nid})")
