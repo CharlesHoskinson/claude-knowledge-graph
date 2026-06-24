@@ -37,3 +37,17 @@ def test_graphify_backend_raises_when_no_graph_produced(tmp_path):
         assert False, "should raise when graphify produced no graph"
     except RuntimeError:
         pass
+
+def test_graphify_backend_raises_on_invalid_node_link(tmp_path):
+    import pytest, json
+    raw = tmp_path / "raw"; raw.mkdir()
+    def fake_run(cmd, *a, **k):
+        out = pathlib.Path(raw) / "graphify-out"; out.mkdir(parents=True, exist_ok=True)
+        # returncode 0 but a dangling link target -> node_link validation must fail
+        bad = {"nodes": [{"id": "a", "label": "A"}], "links": [{"source": "a", "target": "ghost", "relation": "r"}]}
+        (out / "graph.json").write_text(json.dumps(bad), encoding="utf-8")
+        class R: returncode = 0; stdout = ""; stderr = ""
+        return R()
+    manifest = {"raw_dir": str(raw), "files": []}
+    with pytest.raises(RuntimeError):
+        GraphifyBackend().generate(manifest, {}, str(tmp_path / "g.json"), run=fake_run)
