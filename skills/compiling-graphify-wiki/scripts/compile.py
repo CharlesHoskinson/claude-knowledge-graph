@@ -21,20 +21,36 @@ _SafeDumperWithInline.add_representer(
 def _safe(title):
     return _UNSAFE.sub("-", title).strip()
 
-def _src_title(snapshot, source_id):
-    for s in snapshot["sources"]:
-        if s["source_id"] == source_id:
-            return _safe(s["title"])
-    return _safe(source_id)
+def _unique_titles(pairs):
+    """Return a stable id->unique_title map for a list of (id, raw_title) pairs.
 
-def _neighbors(snapshot, node_id):
-    titles = {n["id"]: _safe(n["title"]) for n in snapshot["nodes"]}
+    If multiple ids share the same sanitized title, each is disambiguated as
+    '{safe_title} ({id})' so filenames remain unique and deterministic.
+    """
+    from collections import defaultdict
+    safe_to_ids = defaultdict(list)
+    for nid, raw in pairs:
+        safe_to_ids[_safe(raw)].append(nid)
+
+    result = {}
+    for nid, raw in pairs:
+        safe = _safe(raw)
+        if len(safe_to_ids[safe]) == 1:
+            result[nid] = safe
+        else:
+            result[nid] = _safe(f"{safe} ({nid})")
+    return result
+
+def _src_title(source_id, source_titles):
+    return source_titles.get(source_id, _safe(source_id))
+
+def _neighbors(snapshot, node_id, node_titles):
     out = []
     for e in snapshot["edges"]:
-        if e["source"] == node_id and e["target"] in titles:
-            out.append(titles[e["target"]])
-        elif e["target"] == node_id and e["source"] in titles:
-            out.append(titles[e["source"]])
+        if e["source"] == node_id and e["target"] in node_titles:
+            out.append(node_titles[e["target"]])
+        elif e["target"] == node_id and e["source"] in node_titles:
+            out.append(node_titles[e["source"]])
     return sorted(set(out))
 
 def _claims_for(ledger, node_id):
@@ -43,21 +59,21 @@ def _claims_for(ledger, node_id):
 def _fm(d):
     return "---\n" + yaml.dump(d, Dumper=_SafeDumperWithInline, sort_keys=False, allow_unicode=True) + "---\n"
 
-def _claim_line(snapshot, claim, neighbors):
+def _claim_line(claim, neighbors, source_titles):
     text = claim["text"].rstrip(".")
     if claim.get("source_ids"):
-        src = _src_title(snapshot, claim["source_ids"][0])
+        src = _src_title(claim["source_ids"][0], source_titles)
         loc = claim.get("source_location") or "source"
         return f'- {text}.^[from [[{src}]] — "{loc}"]'
     if neighbors:
         return f'- {text}. Related: [[{neighbors[0]}]]'
     return f'- {text}.  <!-- claim:{claim["claim_id"]} unsourced -->'
 
-def _concept_page(snapshot, ledger, node, date):
-    title = _safe(node["title"])
+def _concept_page(snapshot, ledger, node, date, node_titles, source_titles):
+    title = node_titles[node["id"]]
     claims = _claims_for(ledger, node["id"])
-    neighbors = _neighbors(snapshot, node["id"])
-    src_titles = sorted({_src_title(snapshot, s) for s in node.get("source_ids", [])})
+    neighbors = _neighbors(snapshot, node["id"], node_titles)
+    src_titles = sorted({_src_title(s, source_titles) for s in node.get("source_ids", [])})
     fm = {"type": "concept", "aliases": _Inline(node.get("aliases", [])),
           "tags": _Inline(node.get("tags", []) or ["concept"]),
           "created": date, "updated": date, "status": "draft",
@@ -67,7 +83,7 @@ def _concept_page(snapshot, ledger, node, date):
           "graphify_nodes": _Inline([node["id"]])}
     lines = [_fm(fm), f"# {title}\n", "## Claims"]
     for c in claims:
-        lines.append(_claim_line(snapshot, c, neighbors))
+        lines.append(_claim_line(c, neighbors, source_titles))
     lines.append("\n## Related")
     for nb in neighbors:
         lines.append(f"- [[{nb}]]")
@@ -77,15 +93,15 @@ def _concept_page(snapshot, ledger, node, date):
         lines.append("- [[overview]]")
     return title, "\n".join(lines) + "\n"
 
-def _source_page(source, date):
-    title = _safe(source.get("title") or source["source_id"])
+def _source_page(source, date, source_titles):
+    title = source_titles[source["source_id"]]
     fm = {"type": "source", "aliases": [], "tags": ["source"], "created": date, "updated": date,
           "status": "draft", "url": source.get("uri", ""), "source_type": "webpage", "covers": []}
     return title, _fm(fm) + f"# {title}\n\n## Summary\n\nSource `{source['source_id']}` ingested for graphify compilation.\n"
 
-def _map_page(snapshot, comm, date):
+def _map_page(snapshot, comm, date, node_titles):
     title = _safe(comm["title"])
-    members = [_safe(n["title"]) for n in snapshot["nodes"] if n["id"] in comm.get("member_node_ids", [])]
+    members = [node_titles[n["id"]] for n in snapshot["nodes"] if n["id"] in comm.get("member_node_ids", [])]
     fm = {"type": "map", "tags": ["moc"], "created": date, "updated": date, "status": "draft"}
     body = [f"# {title}\n", "## Members"] + [f"- [[{m}]]" for m in members]
     return title, _fm(fm) + "\n".join(body) + "\n"
@@ -98,16 +114,18 @@ def _register(index_path, title, desc):
 def compile_wiki(snapshot, ledger, out_root, date):
     scaffold.scaffold(out_root, "compiled from a Graphify graph", date)
     root = pathlib.Path(out_root)
+    node_titles = _unique_titles([(n["id"], n["title"]) for n in snapshot["nodes"]])
+    source_titles = _unique_titles([(s["source_id"], s.get("title") or s["source_id"]) for s in snapshot["sources"]])
     for s in snapshot["sources"]:
-        title, text = _source_page(s, date)
+        title, text = _source_page(s, date, source_titles)
         (root / "wiki" / "sources" / f"{title}.md").write_text(text, encoding="utf-8")
         _register(root / "wiki" / "sources" / "_index.md", title, (s.get("uri") or "source"))
     for node in snapshot["nodes"]:
-        title, text = _concept_page(snapshot, ledger, node, date)
+        title, text = _concept_page(snapshot, ledger, node, date, node_titles, source_titles)
         (root / "wiki" / "concepts" / f"{title}.md").write_text(text, encoding="utf-8")
         _register(root / "wiki" / "concepts" / "_index.md", title, title)
     for comm in snapshot["communities"]:
-        title, text = _map_page(snapshot, comm, date)
+        title, text = _map_page(snapshot, comm, date, node_titles)
         (root / "wiki" / "maps" / f"{title}.md").write_text(text, encoding="utf-8")
     return None
 
