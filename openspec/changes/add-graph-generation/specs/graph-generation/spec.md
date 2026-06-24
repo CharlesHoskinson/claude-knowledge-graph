@@ -44,7 +44,8 @@ NetworkX node-link schema the compile pipeline already validates.
 
 #### Scenario: Graphify backend
 - **WHEN** the `graphify` backend is selected
-- **THEN** the skill runs Graphify's extractor with the ontology injected as extraction guidance and post-filters the result to the ontology's types
+- **THEN** the skill runs Graphify's extractor over the staged source and validates the output against the node-link contract
+- **AND** because Graphify output is type-less, ontology entity/relation *types* are NOT enforced by this backend (the `llm` backend enforces them); the ontology serves only as loose extraction guidance here
 - **AND** the output is a node-link `graph.json` (top keys `directed/multigraph/graph/nodes/links/hyperedges`)
 
 #### Scenario: LLM backend
