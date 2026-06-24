@@ -2,7 +2,7 @@
 """Classify inputs and stage local files/directories into a raw/ workspace."""
 import argparse, json, sys, pathlib, glob, shutil, subprocess
 
-_LLM_WIKI_SCRAPE = pathlib.Path(__file__).resolve().parents[3] / "llm-wiki" / "scripts" / "scrape.py"
+_LLM_WIKI_SCRAPE = pathlib.Path(__file__).resolve().parents[2] / "llm-wiki" / "scripts" / "scrape.py"
 
 def classify_input(path):
     if path.startswith("http://") or path.startswith("https://"):

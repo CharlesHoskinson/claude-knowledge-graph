@@ -30,3 +30,7 @@ def test_pick_markdown_raises_without_md():
     import pytest
     with pytest.raises(RuntimeError):
         acquire._pick_markdown({"img1.png", "data.json"})
+
+def test_scrape_script_path_resolves():
+    # the default URL fetcher must point at the real llm-wiki scrape.py
+    assert acquire._LLM_WIKI_SCRAPE.exists(), acquire._LLM_WIKI_SCRAPE
