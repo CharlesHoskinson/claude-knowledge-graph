@@ -1,0 +1,13 @@
+[
+  {"entities": [
+    {"name": "app", "type": "Module"},
+    {"name": "db", "type": "Module"},
+    {"name": "config", "type": "Symbol"},
+    {"name": "connect", "type": "Symbol"}
+  ]},
+  {"relations": [
+    {"source": "app", "predicate": "imports", "target": "db"},
+    {"source": "app", "predicate": "defines", "target": "config"},
+    {"source": "db", "predicate": "defines", "target": "connect"}
+  ]}
+]
