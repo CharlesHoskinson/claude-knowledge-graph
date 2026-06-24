@@ -14,11 +14,12 @@ def _prf(pred, gold):
 
 def score(predicted, gold):
     label = {n["id"]: _norm(n.get("label", n["id"])) for n in predicted.get("nodes", [])}
-    pred_entities = {(_norm(n.get("label", n["id"])), n.get("type", "")) for n in predicted.get("nodes", [])}
-    gold_entities = {(_norm(e["name"]), e["type"]) for e in gold.get("entities", [])}
-    pred_relations = {(label.get(l["source"], _norm(l["source"])), l["relation"],
+    # entities/relations matched case-insensitively (name, type, predicate all normalized)
+    pred_entities = {(_norm(n.get("label", n["id"])), _norm(n.get("type", ""))) for n in predicted.get("nodes", [])}
+    gold_entities = {(_norm(e["name"]), _norm(e["type"])) for e in gold.get("entities", [])}
+    pred_relations = {(label.get(l["source"], _norm(l["source"])), _norm(l["relation"]),  # fall back to the raw (normalized) id if a link endpoint isn't a known node
                        label.get(l["target"], _norm(l["target"]))) for l in predicted.get("links", [])}
-    gold_relations = {(_norm(r["source"]), r["predicate"], _norm(r["target"])) for r in gold.get("relations", [])}
+    gold_relations = {(_norm(r["source"]), _norm(r["predicate"]), _norm(r["target"])) for r in gold.get("relations", [])}
     return {"entities": _prf(pred_entities, gold_entities),
             "relations": _prf(pred_relations, gold_relations)}
 

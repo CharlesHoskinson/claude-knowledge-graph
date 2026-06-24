@@ -49,7 +49,7 @@ Use this when running inside Claude Code — Claude is the extractor.
 3. Read `worksheet.json`. For EACH entry IN ORDER, perform two-stage extraction and append
    TWO objects to `responses.json` (a flat JSON array):
    - first `{"entities": [{"name","type"}, ...]}` — only `entity_types` from the entry, drawn from `text`;
-   - then `{"relations": [{"source","predicate","target"}, ...]}` — only `relation_types`, endpoints among the entities you just listed.
+   - then `{"relations": [{"source","predicate","target"}, ...]}` — only `relation_types`, endpoints among the entities you just listed. The `source` and `target` values MUST use the exact `name` strings from the entities you listed in stage 1 of the SAME chunk — mismatched endpoint names are silently dropped.
    The array MUST have exactly two objects per worksheet entry, in worksheet order (the
    backend re-chunks with the same `--chunk-size`/`--overlap`, so order and count must match).
 4. `python scripts/generate.py --manifest manifest.json --ontology ontology.yaml --backend llm --cassette responses.json --chunk-size 1200 --overlap 150 --out graph.json --report report.json`

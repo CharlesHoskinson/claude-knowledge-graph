@@ -30,3 +30,9 @@ def test_extra_entity_lowers_precision():
     s = evaluate.score(pred, GOLD)
     assert s["entities"]["recall"] == 1.0
     assert round(s["entities"]["precision"], 3) == round(2/3, 3)
+
+def test_type_match_is_case_insensitive():
+    gold = {"entities": [{"name": "app", "type": "Module"}], "relations": []}
+    pred = {"nodes": [{"id": "app_module", "label": "app", "type": "module"}], "links": []}  # lowercase type
+    s = evaluate.score(pred, gold)
+    assert s["entities"]["f1"] == 1.0
