@@ -1,0 +1,22 @@
+ontology_id: software-project
+intent_ref: intent.md
+entity_types:
+  - name: Module
+    description: A source-code module or document unit.
+    examples: [app, db, api]
+  - name: Symbol
+    description: A named function, class, or config key.
+    examples: [config, connect, router]
+relation_types:
+  - name: imports
+    domain: Module
+    range: Module
+    description: One module imports another.
+  - name: defines
+    domain: Module
+    range: Symbol
+    description: A module defines a symbol.
+scope:
+  include: [src, docs]
+  exclude: [tests, build]
+  granularity: symbol

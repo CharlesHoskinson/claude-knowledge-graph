@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["ontology_id", "entity_types", "relation_types", "scope"],
+  "properties": {
+    "ontology_id": {"type": "string"},
+    "intent_ref": {"type": "string"},
+    "entity_types": {"type": "array", "items": {
+      "type": "object", "required": ["name", "description"],
+      "properties": {"name": {"type": "string"}, "description": {"type": "string"},
+                     "examples": {"type": "array", "items": {"type": "string"}}}}},
+    "relation_types": {"type": "array", "items": {
+      "type": "object", "required": ["name", "domain", "range", "description"],
+      "properties": {"name": {"type": "string"}, "domain": {"type": "string"},
+                     "range": {"type": "string"}, "description": {"type": "string"}}}},
+    "scope": {"type": "object", "required": ["granularity"],
+      "properties": {"include": {"type": "array", "items": {"type": "string"}},
+                     "exclude": {"type": "array", "items": {"type": "string"}},
+                     "granularity": {"enum": ["document", "section", "symbol", "sentence"]}}}
+  }
+}
