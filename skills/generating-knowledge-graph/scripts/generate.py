@@ -3,8 +3,13 @@
 import argparse, json, sys, pathlib, yaml, subprocess
 import graph_validate
 from graphify_backend import GraphifyBackend
+from llm_backend import LlmBackend
+from llm_client import make_ollama_client
 
-BACKENDS = {"graphify": GraphifyBackend}
+BACKENDS = {
+    "graphify": lambda: GraphifyBackend(),
+    "llm": lambda: LlmBackend(make_ollama_client()),
+}
 
 def generate_graph(manifest, ontology_obj, backend, out_path, report_path, run=subprocess.run):
     graph = backend.generate(manifest, ontology_obj, out_path, run=run)
