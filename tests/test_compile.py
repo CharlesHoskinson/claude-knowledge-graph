@@ -1,5 +1,5 @@
 # tests/test_compile.py
-import json, pathlib
+import json, pathlib, subprocess, sys
 import compile as compiler, ledger
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -45,6 +45,44 @@ def test_no_title_collision_data_loss(tmp_path):
     pages = list((out / "wiki" / "concepts").glob("*.md"))
     pages = [p for p in pages if p.stem != "_index"]
     assert len(pages) == len(snap["nodes"]), f"{len(pages)} pages != {len(snap['nodes'])} nodes (collision data loss)"
+
+LINT = ROOT / "skills" / "llm-wiki" / "scripts" / "lint.py"
+
+
+def test_root_index_shows_real_category_counts(tmp_path):
+    # B2: root index.md router must reflect real counts, not hardcoded (0).
+    out = _build(tmp_path)
+    router = (out / "index.md").read_text(encoding="utf-8")
+    lines = {l.split("|")[1].split("]]")[0]: l for l in router.splitlines() if l.startswith("- [[")}
+    # snapshot-tiny: 3 concepts, 2 sources, 0 entities, 0 syntheses
+    assert lines["concepts"].rstrip().endswith("(3)"), lines["concepts"]
+    assert lines["sources"].rstrip().endswith("(2)"), lines["sources"]
+    assert lines["entities"].rstrip().endswith("(0)"), lines["entities"]
+    assert lines["syntheses"].rstrip().endswith("(0)"), lines["syntheses"]
+
+
+def test_cross_category_title_collision_disambiguated(tmp_path):
+    # B3: a concept and a source whose stems fold to the same value must produce
+    # two distinctly-named pages (no cross-category stem collision), and lint passes.
+    snap = {"snapshot_id": "s", "created_at": "2026-06-24T00:00:00Z",
+            "nodes": [
+                {"id": "n1", "kind": "concept", "title": "Docs", "aliases": [], "description": "",
+                 "tags": [], "entity_kind": None, "source_ids": ["docs.md"], "source_location": ""}],
+            "edges": [],
+            "sources": [{"source_id": "docs.md", "title": "Docs", "uri": "https://x/docs"}],
+            "communities": []}
+    led = ledger.build_ledger(snap, "led")
+    out = tmp_path / "wiki-root"
+    compiler.compile_wiki(snap, led, str(out), "2026-06-24")
+    concept_pages = [p for p in (out / "wiki" / "concepts").glob("*.md") if p.stem != "_index"]
+    source_pages = [p for p in (out / "wiki" / "sources").glob("*.md") if p.stem != "_index"]
+    assert len(concept_pages) == 1 and len(source_pages) == 1
+    all_stems = {p.stem.lower() for p in concept_pages + source_pages}
+    assert len(all_stems) == 2, [p.name for p in concept_pages + source_pages]
+    # the concept's sources: link must resolve unambiguously -> lint clean
+    proc = subprocess.run([sys.executable, str(LINT), str(out)], capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
 
 def test_case_only_title_collision_disambiguated(tmp_path):
     snap = {"snapshot_id": "s", "created_at": "2026-06-24T00:00:00Z",
