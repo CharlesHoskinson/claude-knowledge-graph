@@ -13,10 +13,10 @@ def validate_node_link(graph):
         return [{"severity": "error", "category": "node-link-schema",
                  "message": str(e.message), "path": "/".join(str(p) for p in e.absolute_path)}]
     ids = {n["id"] for n in graph["nodes"]}
-    for i, l in enumerate(graph["links"]):
+    for i, link in enumerate(graph["links"]):
         for endpoint in ("source", "target"):
-            if l.get(endpoint) not in ids:
+            if link.get(endpoint) not in ids:
                 findings.append({"severity": "error", "category": "dangling-endpoint",
-                                 "message": f"link[{i}] {endpoint} '{l.get(endpoint)}' not a node id",
+                                 "message": f"link[{i}] {endpoint} '{link.get(endpoint)}' not a node id",
                                  "path": f"links/{i}/{endpoint}"})
     return findings

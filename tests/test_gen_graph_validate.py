@@ -25,3 +25,9 @@ def test_unknown_node_type_fails_when_types_present():
     rep = graph_validate.validate_graph(g, ontology.load_ontology(str(ONT)))
     assert rep["result"] == "fail"
     assert any(f["category"] == "unknown-type" for f in rep["findings"])
+
+def test_missing_provenance_yields_exactly_warn():
+    g = _g()
+    del g["nodes"][0]["source_location"]   # one node loses provenance; no type errors -> warn (not fail)
+    rep = graph_validate.validate_graph(g, ontology.load_ontology(str(ONT)))
+    assert rep["result"] == "warn", rep["findings"]

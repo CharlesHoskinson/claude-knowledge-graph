@@ -12,6 +12,7 @@ LINT = ROOT / "skills" / "llm-wiki" / "scripts" / "lint.py"
 
 def _fake_graphify(raw_dir):
     def fake_run(cmd, *a, **k):
+        assert cmd[1:4] == ["-m", "graphify", "extract"], cmd
         out = pathlib.Path(raw_dir) / "graphify-out"; out.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(SAMPLE, out / "graph.json")
         class R: returncode = 0; stdout = ""; stderr = ""

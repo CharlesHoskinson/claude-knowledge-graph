@@ -5,7 +5,7 @@ import argparse, json, sys, pathlib, yaml, jsonschema
 _SCHEMA = pathlib.Path(__file__).resolve().parent.parent / "schemas" / "ontology.schema.json"
 
 def load_ontology(path):
-    return yaml.safe_load(open(path, encoding="utf-8").read())
+    return yaml.safe_load(pathlib.Path(path).read_text(encoding="utf-8"))
 
 def validate_ontology(obj):
     findings = []

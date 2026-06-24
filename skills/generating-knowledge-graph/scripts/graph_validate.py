@@ -25,9 +25,9 @@ def validate_graph(graph, ontology):
         for missing in sorted(entity_names - present):
             findings.append({"severity": "warning", "category": "unused-entity-type",
                              "message": f"ontology entity_type '{missing}' has no instances", "path": "ontology"})
-    typed_links = [l for l in graph.get("links", []) if l.get("type")]
-    for l in typed_links:
-        if l["type"] not in relation_names:
+    typed_links = [link for link in graph.get("links", []) if link.get("type")]
+    for link in typed_links:
+        if link["type"] not in relation_names:
             findings.append({"severity": "error", "category": "unknown-type",
                              "message": f"link type '{l['type']}' not in ontology relation_types",
                              "path": "links"})
@@ -41,8 +41,8 @@ def main(argv):
     ap.add_argument("--ontology", required=True)
     ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
-    graph = json.loads(open(a.graph, encoding="utf-8").read())
-    ont = yaml.safe_load(open(a.ontology, encoding="utf-8").read())
+    graph = json.loads(pathlib.Path(a.graph).read_text(encoding="utf-8"))
+    ont = yaml.safe_load(pathlib.Path(a.ontology).read_text(encoding="utf-8"))
     rep = validate_graph(graph, ont)
     if a.out:
         pathlib.Path(a.out).write_text(json.dumps(rep, indent=2), encoding="utf-8")
