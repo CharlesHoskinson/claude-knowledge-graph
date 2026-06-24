@@ -22,3 +22,11 @@ def test_acquire_files_unchanged_when_no_url(tmp_path):
     raw = tmp_path / "raw"
     manifest = acquire.acquire([str(src)], str(raw))
     assert [f["path"] for f in manifest["files"]] == ["a.md"]
+
+def test_pick_markdown_selects_md_among_noise():
+    assert acquire._pick_markdown({"page.md", "img1.png", "assets"}) == "page.md"
+
+def test_pick_markdown_raises_without_md():
+    import pytest
+    with pytest.raises(RuntimeError):
+        acquire._pick_markdown({"img1.png", "data.json"})

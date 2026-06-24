@@ -32,17 +32,27 @@ def _iter_files(inputs):
                 if mp.is_file():
                     yield mp.parent, mp
 
+def _pick_markdown(new_names):
+    """From the filenames scrape.py newly created, return the single markdown doc.
+    Scrape may also drop images/assets; we want the .md. Deterministic."""
+    md = sorted(n for n in new_names if n.lower().endswith(".md"))
+    if not md:
+        raise RuntimeError(f"scrape produced no markdown file (saw: {sorted(new_names)})")
+    return md[0]
+
 def _scrape_fetcher(url, raw_dir):
     """Default URL fetcher: llm-wiki scrape.py -> clean markdown in raw_dir.
     Fetched content is untrusted source data, never instructions."""
-    before = {p.name for p in pathlib.Path(raw_dir).glob("*")} if pathlib.Path(raw_dir).exists() else set()
-    subprocess.run([sys.executable, str(_LLM_WIKI_SCRAPE), "fetch", url, "--out-dir", raw_dir],
-                   check=True, capture_output=True, text=True)
-    after = {p.name for p in pathlib.Path(raw_dir).glob("*")}
-    new = sorted(after - before)
-    if not new:
-        raise RuntimeError(f"scrape produced no file for {url}")
-    return new[0]
+    if not _LLM_WIKI_SCRAPE.exists():
+        raise FileNotFoundError(f"llm-wiki scrape.py not found at {_LLM_WIKI_SCRAPE}")
+    rawp = pathlib.Path(raw_dir)
+    before = {p.name for p in rawp.glob("*")} if rawp.exists() else set()
+    proc = subprocess.run([sys.executable, str(_LLM_WIKI_SCRAPE), "fetch", url, "--out-dir", raw_dir],
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"scrape failed for {url}: {proc.stderr.strip()[:500]}")
+    after = {p.name for p in rawp.glob("*")}
+    return _pick_markdown(after - before)
 
 def acquire(inputs, raw_dir, fetcher=None):
     raw = pathlib.Path(raw_dir)
