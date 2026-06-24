@@ -31,3 +31,13 @@ def test_missing_provenance_yields_exactly_warn():
     del g["nodes"][0]["source_location"]   # one node loses provenance; no type errors -> warn (not fail)
     rep = graph_validate.validate_graph(g, ontology.load_ontology(str(ONT)))
     assert rep["result"] == "warn", rep["findings"]
+
+def test_unknown_link_type_fails_when_present():
+    g = _g()
+    # give nodes types so the typed path is active, and inject a link with a bad type
+    for n in g["nodes"]:
+        n["type"] = "Module"
+    g["links"][0]["type"] = "frobnicates"   # not an ontology relation_type
+    rep = graph_validate.validate_graph(g, ontology.load_ontology(str(ONT)))
+    assert rep["result"] == "fail"
+    assert any(f["category"] == "unknown-type" for f in rep["findings"])

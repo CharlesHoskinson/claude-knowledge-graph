@@ -29,7 +29,7 @@ def validate_graph(graph, ontology):
     for link in typed_links:
         if link["type"] not in relation_names:
             findings.append({"severity": "error", "category": "unknown-type",
-                             "message": f"link type '{l['type']}' not in ontology relation_types",
+                             "message": f"link type '{link['type']}' not in ontology relation_types",
                              "path": "links"})
     sev = {f["severity"] for f in findings}
     result = "fail" if "error" in sev else ("warn" if "warning" in sev else "pass")
