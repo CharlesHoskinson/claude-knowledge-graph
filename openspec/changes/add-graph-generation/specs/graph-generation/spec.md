@@ -90,3 +90,28 @@ SHALL be isolated behind an explicit marker.
 #### Scenario: LLM backend tested without network
 - **WHEN** the `llm` backend test suite runs in CI
 - **THEN** model responses are supplied via record/replay (or a stub), no network is required, and live-extraction tests are skipped unless an explicit network/LLM marker is enabled
+
+### Requirement: Claude-native extraction (no API key)
+The skill SHALL support performing extraction with Claude itself inside Claude Code — no
+external model, SDK, or API key — by routing Claude's per-chunk two-stage answers through
+the existing `llm` backend.
+
+#### Scenario: Worksheet aligns Claude with the backend
+- **WHEN** the user runs the Claude-native path on a source
+- **THEN** a `prep` step chunks the source with the same `chunk_text` the backend uses and emits a worksheet (per chunk: text + entity/relation prompts + allowed ontology types) so Claude's answer order matches the backend's chunk order
+
+#### Scenario: Cassette assembly from Claude's answers
+- **WHEN** Claude has written its two-stage answers as an ordered responses file
+- **THEN** `generate --backend llm --cassette <file>` assembles them into a typed `graph.json` through the existing merge/dedupe/cluster/validate pipeline, requiring no Ollama and no API key
+
+### Requirement: Extraction quality evaluation
+The skill SHALL provide an offline, deterministic way to measure extraction quality against
+a labeled gold graph.
+
+#### Scenario: Precision/recall against gold
+- **WHEN** a predicted graph is scored against a gold graph
+- **THEN** `score` reports entity and typed-relation precision, recall, and F1 (entities matched by normalized `(name, type)`, relations by normalized typed triple)
+
+#### Scenario: Offline eval run
+- **WHEN** the eval harness runs in CI
+- **THEN** it scores a backend driven by a recorded cassette over a synthetic gold fixture; live model-comparison runs are marker-gated/manual, not committed test code

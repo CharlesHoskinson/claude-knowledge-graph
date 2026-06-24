@@ -58,9 +58,16 @@ user actually wants. Graphify can extract graphs locally (Ollama) but does so ge
 - **Fixtures are synthetic.** Because graphs are user-generated, the repo ships only
   synthetic node-link + ontology fixtures. `fixtures/graph-real.json` is purged from tree
   and history.
+- **Claude-native extraction (no API key).** This is a Claude skill suite run in Claude
+  Code, so Claude itself is the extractor — the **Anthropic SDK adapter and API-provider
+  parity test are dropped**. Claude performs the two-stage extraction (guided by SKILL.md +
+  a `prep` worksheet) and its answers assemble through the existing `llm` backend via
+  `generate --cassette`. The Ollama adapter remains the headless/standalone fallback; the
+  API-default model notes above are reference only.
 - **Staging.** G1 = scaffold + intent-brainstorm + ontology draft/confirm + backend
   interface + `graphify` backend + acquire(files/dir) + validate + handoff + fixture purge.
-  G2 = `llm` backend + URL acquisition. G3 = model tuning + extraction-quality evals.
+  G2 = `llm` backend (Ollama) + URL acquisition. G3 = Claude-native extraction path
+  (`prep` + `generate --cassette` + SKILL.md) + extraction-quality eval harness.
 
 ## Risks / Trade-offs
 

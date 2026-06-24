@@ -21,8 +21,14 @@
 - [ ] 2.6 URL acquisition in `acquire.py`: classify `"url"`; fetch via `llm-wiki/scripts/scrape.py` → clean markdown into `raw/`; untrusted-content sanitization + provenance (`fetched_at`, `is_verbatim`); offline stub test, live behind a `network` marker
 - [ ] 2.7 End-to-end (offline, cassette): fixture source + ontology → `llm` backend → typed `graph.json` → compile pipeline → `llm-wiki lint` 0 findings
 
-## 3. G3 — Anthropic adapter, parity, and extraction evals
+## 3. G3 — Claude-native extraction path + eval harness
 
-- [ ] 3.1 Anthropic `complete_json` adapter: Claude Haiku 4.5 / Sonnet 4.6 via Structured Outputs (strict tool use, thinking OFF, temp 0, flattened schema)
-- [ ] 3.2 Cross-provider parity test: same fixture source + ontology through the ollama and anthropic clients (cassettes) → schema-identical, ontology-valid graphs
-- [ ] 3.3 Extraction-quality eval harness (entity + typed-relation precision/recall vs. a labeled synthetic fixture); per-model comparison + tuning (quant/context/temperature for the local default)
+(The Anthropic SDK adapter and cross-provider API-parity test are DROPPED: this is a
+Claude skill suite run inside Claude Code, so Claude itself is the extractor — no SDK, no
+API key. The Ollama adapter remains the headless/standalone fallback.)
+
+- [ ] 3.1 `prep.py`: stage the source, chunk it with the same `chunk_text` the backend uses, and emit a `worksheet.json` (per chunk: text + entity/relation prompts + allowed ontology types) so Claude's per-chunk extraction aligns with the backend's chunking; unit-tested
+- [ ] 3.2 `generate.py --cassette <file>`: run the `llm` backend from a recorded responses file (`LlmBackend(CassetteClient(json.load(file)))`), so Claude's worksheet answers assemble into a typed graph via the existing merge/dedupe/cluster/validate pipeline; CLI-level test
+- [ ] 3.3 SKILL.md Claude-native procedure: read the worksheet, perform two-stage extraction per chunk (entities typed to ontology, then relations constrained to it), write `responses.json` in backend order, then `generate --cassette` → handoff to compile. No Ollama/keys required
+- [ ] 3.4 `evaluate.py`: `score(predicted_graph, gold_graph) -> {entities:{precision,recall,f1}, relations:{precision,recall,f1}}` (entities matched by normalized `(name,type)`, relations by normalized typed triple); unit-tested on crafted predicted-vs-gold pairs
+- [ ] 3.5 Gold fixture (synthetic labeled source + gold graph) + an offline eval harness: run a backend via cassette over the gold source → predicted graph → `score` vs gold → report; live model comparison/tuning is a marker-gated/manual runbook, not committed test code
