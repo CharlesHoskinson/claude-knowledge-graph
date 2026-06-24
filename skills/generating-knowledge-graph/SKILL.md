@@ -39,3 +39,20 @@ ships no graphs.
 - The `llm` backend and URL acquisition arrive in G2; model defaults: local
   `qwen2.5-32b-instruct` (non-thinking, temp 0, JSON schema), API Claude Haiku 4.5 /
   Sonnet 4.6 (structured outputs, thinking off).
+
+## Claude-native extraction (no Ollama, no API key)
+
+Use this when running inside Claude Code — Claude is the extractor.
+
+1. `python scripts/acquire.py --inputs <files-or-dir> --raw raw/ --out manifest.json`
+2. `python scripts/prep.py --manifest manifest.json --ontology ontology.yaml --out worksheet.json --chunk-size 1200 --overlap 150`
+3. Read `worksheet.json`. For EACH entry IN ORDER, perform two-stage extraction and append
+   TWO objects to `responses.json` (a flat JSON array):
+   - first `{"entities": [{"name","type"}, ...]}` — only `entity_types` from the entry, drawn from `text`;
+   - then `{"relations": [{"source","predicate","target"}, ...]}` — only `relation_types`, endpoints among the entities you just listed.
+   The array MUST have exactly two objects per worksheet entry, in worksheet order (the
+   backend re-chunks with the same `--chunk-size`/`--overlap`, so order and count must match).
+4. `python scripts/generate.py --manifest manifest.json --ontology ontology.yaml --backend llm --cassette responses.json --chunk-size 1200 --overlap 150 --out graph.json --report report.json`
+5. Hand `graph.json` to `compiling-graphify-wiki` (normalize → ledger → compile).
+
+The Ollama adapter (`--backend llm` without `--cassette`) remains the headless fallback.
