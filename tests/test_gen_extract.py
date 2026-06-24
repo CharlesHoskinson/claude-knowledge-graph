@@ -1,5 +1,5 @@
 # tests/test_gen_extract.py
-import json, pathlib
+import pathlib
 import extract, llm_client
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]

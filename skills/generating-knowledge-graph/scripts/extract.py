@@ -54,11 +54,14 @@ def extract_graph(text, ontology, client, source_file, chunk_size=1200, overlap=
             nodes.setdefault(nid, {"id": nid, "label": e["name"], "type": e["type"],
                                    "source_file": source_file, "source_location": loc})
         rels = validate_response(client(relation_prompt(ch, kept, ontology), RELATION_SCHEMA), RELATION_SCHEMA)["relations"]
+        # Relations are resolved CHUNK-LOCALLY: source/target must be entities extracted
+        # from THIS chunk. A relation whose endpoint was only seen in a different chunk is
+        # dropped by design (KGGen-style); chunk `overlap` mitigates soft-boundary loss.
         for r in rels:
             if r["predicate"] not in relation_types:
                 continue
             s_id, t_id = name_to_id.get(r["source"]), name_to_id.get(r["target"])
-            if not s_id or not t_id:
+            if s_id is None or t_id is None:
                 continue
             key = (s_id, r["predicate"], t_id)
             links.setdefault(key, {"source": s_id, "target": t_id, "relation": r["predicate"],
