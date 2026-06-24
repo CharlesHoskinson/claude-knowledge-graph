@@ -4,7 +4,7 @@ import argparse, json, sys, pathlib, yaml, subprocess
 import graph_validate
 from graphify_backend import GraphifyBackend
 from llm_backend import LlmBackend
-from llm_client import make_ollama_client
+from llm_client import make_ollama_client, CassetteClient
 
 BACKENDS = {
     "graphify": lambda: GraphifyBackend(),
@@ -24,12 +24,20 @@ def main(argv):
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--ontology", required=True)
     ap.add_argument("--backend", choices=sorted(BACKENDS), default="graphify")
+    ap.add_argument("--cassette", default=None)
+    ap.add_argument("--chunk-size", type=int, default=1200)
+    ap.add_argument("--overlap", type=int, default=150)
     ap.add_argument("--out", required=True)
     ap.add_argument("--report", required=True)
     a = ap.parse_args(argv)
-    manifest = json.loads(pathlib.Path(a.manifest).read_text(encoding="utf-8"))
-    ont = yaml.safe_load(pathlib.Path(a.ontology).read_text(encoding="utf-8"))
-    backend = BACKENDS[a.backend]()
+    manifest = json.loads(open(a.manifest, encoding="utf-8").read())
+    ont = yaml.safe_load(open(a.ontology, encoding="utf-8").read())
+    if a.cassette:
+        from llm_backend import LlmBackend
+        responses = json.loads(open(a.cassette, encoding="utf-8").read())
+        backend = LlmBackend(CassetteClient(responses), chunk_size=a.chunk_size, overlap=a.overlap)
+    else:
+        backend = BACKENDS[a.backend]()
     res = generate_graph(manifest, ont, backend, a.out, a.report)
     print(json.dumps(res["report"], indent=2))
     return 0
