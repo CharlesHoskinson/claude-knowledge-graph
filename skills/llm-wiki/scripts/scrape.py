@@ -159,7 +159,7 @@ def build_frontmatter(meta):
             lines.append(f"{k}: {'true' if v else 'false'}")
         else:
             s = str(v)
-            if s == "" or any(c in s for c in ':#"\n'):
+            if s == "" or any(c in s for c in ':#"\n') or (s and s[0] in '@%`!&*?|>'):
                 s = '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
             lines.append(f"{k}: {s}")
     lines.append("---")

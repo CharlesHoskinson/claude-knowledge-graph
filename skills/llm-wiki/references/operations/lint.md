@@ -91,7 +91,7 @@ The script exits non-zero if any findings are present and prints a categorized r
 | `missing_frontmatter` | Pages with no YAML frontmatter block, or whose frontmatter lacks a `type` field |
 | `unsourced_claims` | Claim lines on `concept`/`entity` pages that lack a provenance marker (heuristic flagging of `UNSOURCED` defects per `conventions.md §4`) |
 
-Navigation scaffolding files — `index.md`, the category `_index.md` files, `overview.md`, and `log.md` — are exempt from `missing_frontmatter` and `broken_links` (they are catalogs/navigation, not content pages) and from `orphans`. Their outbound links still count toward other pages' inbound totals.
+Navigation scaffolding files — `index.md`, the category `_index.md` files, `overview.md`, and `log.md` — are exempt from `missing_frontmatter`, `broken_links` (including broken outbound links from their own content), and `orphans`. Their outbound links still count toward other pages' inbound totals.
 
 ### Graceful degradation
 
