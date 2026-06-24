@@ -1,7 +1,8 @@
 # Graphify Inputs (real schema)
 
-Ground truth: `fixtures/graph-real.json` (a real Graphify export). `graph.json` is a
-NetworkX node-link dict.
+Ground truth: the NetworkX node-link `graph.json` shape, verified against real Graphify
+exports during design. The repo ships only a synthetic, general-purpose sample
+(`fixtures/graph-sample.json`) — graphs are user-generated, never shipped.
 
 ## Top-level keys
 `directed`, `multigraph`, `graph`, `nodes`, `links` (NOT "edges"), `hyperedges`.

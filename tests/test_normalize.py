@@ -33,7 +33,7 @@ def test_communities_grouped_by_integer_attr():
     assert sorted(c1["member_node_ids"]) == ["proof_outsourcing", "verification"]
 
 def test_real_export_normalizes_without_error():
-    raw = json.loads((ROOT / "fixtures" / "graph-real.json").read_text(encoding="utf-8"))
+    raw = json.loads((ROOT / "fixtures" / "graph-sample.json").read_text(encoding="utf-8"))
     snap = normalize.normalize(raw, "snap-real", "2026-06-24T00:00:00Z")
     jsonschema.validate(snap, json.loads((SCHEMAS / "graphify-snapshot.schema.json").read_text(encoding="utf-8")))
     assert len(snap["nodes"]) == len(raw["nodes"])

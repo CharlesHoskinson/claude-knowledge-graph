@@ -23,7 +23,7 @@ def test_tiny_graph_compiles_to_lint_clean_wiki(tmp_path):
     assert "compile graphify wiki" in log.stdout
 
 def test_real_export_compiles_to_lint_clean_wiki(tmp_path):
-    out, led = _compile("graph-real.json", tmp_path, "snap-real")
+    out, led = _compile("graph-sample.json", tmp_path, "snap-real")
     proc = subprocess.run([sys.executable, str(LINT), str(out)], capture_output=True, text=True)
     assert "0 finding(s)." in proc.stdout, proc.stdout[-3000:]
 

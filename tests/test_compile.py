@@ -37,7 +37,7 @@ def test_pages_registered_in_category_index(tmp_path):
 
 def test_no_title_collision_data_loss(tmp_path):
     import normalize
-    raw = json.loads((ROOT / "fixtures" / "graph-real.json").read_text(encoding="utf-8"))
+    raw = json.loads((ROOT / "fixtures" / "graph-sample.json").read_text(encoding="utf-8"))
     snap = normalize.normalize(raw, "snap-real", "2026-06-24T00:00:00Z")
     led = ledger.build_ledger(snap, "led-real")
     out = tmp_path / "wiki-root"
