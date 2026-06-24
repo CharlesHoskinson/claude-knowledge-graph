@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["ledger_id", "graph_snapshot_id", "created_at", "claims"],
+  "properties": {
+    "ledger_id": {"type": "string"},
+    "graph_snapshot_id": {"type": "string"},
+    "created_at": {"type": "string"},
+    "claims": {"type": "array", "items": {
+      "type": "object",
+      "required": ["claim_id", "text", "claim_type", "status", "graphify_nodes", "source_ids"],
+      "properties": {
+        "claim_id": {"type": "string", "pattern": "^CLM-[0-9]{4,}$"},
+        "text": {"type": "string"},
+        "claim_type": {"enum": ["attribute", "edge", "community_summary"]},
+        "status": {"enum": ["supported", "inferred", "contested"]},
+        "node_id": {"type": ["string", "null"]},
+        "graphify_nodes": {"type": "array", "items": {"type": "string"}},
+        "graphify_edges": {"type": "array", "items": {"type": "string"}},
+        "source_ids": {"type": "array", "items": {"type": "string"}},
+        "source_location": {"type": "string"},
+        "contradicts": {"type": "array", "items": {"type": "string"}}
+      }
+    }}
+  }
+}
