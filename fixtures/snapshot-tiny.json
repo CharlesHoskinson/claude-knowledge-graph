@@ -1,0 +1,104 @@
+{
+  "snapshot_id": "snap-tiny",
+  "created_at": "2026-06-24T00:00:00Z",
+  "nodes": [
+    {
+      "id": "proof_outsourcing",
+      "kind": "concept",
+      "title": "Proof Outsourcing",
+      "aliases": [],
+      "description": "",
+      "tags": [
+        "doc"
+      ],
+      "entity_kind": null,
+      "source_ids": [
+        "docs/protocol.md"
+      ],
+      "source_location": "L10"
+    },
+    {
+      "id": "verification",
+      "kind": "concept",
+      "title": "Verification",
+      "aliases": [],
+      "description": "",
+      "tags": [
+        "doc"
+      ],
+      "entity_kind": null,
+      "source_ids": [
+        "docs/protocol.md"
+      ],
+      "source_location": "L20"
+    },
+    {
+      "id": "example_prover",
+      "kind": "concept",
+      "title": "Example Prover",
+      "aliases": [],
+      "description": "",
+      "tags": [
+        "doc"
+      ],
+      "entity_kind": null,
+      "source_ids": [
+        "docs/prover.md"
+      ],
+      "source_location": "L5"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "proof_outsourcing",
+      "target": "verification",
+      "predicate": "requires",
+      "source_ids": [
+        "docs/protocol.md"
+      ],
+      "source_location": "L10"
+    },
+    {
+      "id": "e2",
+      "source": "example_prover",
+      "target": "proof_outsourcing",
+      "predicate": "performs",
+      "source_ids": [
+        "docs/prover.md"
+      ],
+      "source_location": "L5"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "docs/protocol.md",
+      "title": "docs-protocol",
+      "uri": "https://example.org/protocol"
+    },
+    {
+      "source_id": "docs/prover.md",
+      "title": "docs-prover",
+      "uri": "https://example.org/prover"
+    }
+  ],
+  "communities": [
+    {
+      "id": "c1",
+      "title": "Community 1",
+      "summary": "",
+      "member_node_ids": [
+        "proof_outsourcing",
+        "verification"
+      ]
+    },
+    {
+      "id": "c2",
+      "title": "Community 2",
+      "summary": "",
+      "member_node_ids": [
+        "example_prover"
+      ]
+    }
+  ]
+}
