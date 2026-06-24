@@ -26,3 +26,10 @@ def test_real_export_compiles_to_lint_clean_wiki(tmp_path):
     out, led = _compile("graph-real.json", tmp_path, "snap-real")
     proc = subprocess.run([sys.executable, str(LINT), str(out)], capture_output=True, text=True)
     assert "0 finding(s)." in proc.stdout, proc.stdout[-3000:]
+
+def test_apply_raises_on_empty_commit(tmp_path):
+    import pytest
+    out, led = _compile("graph-tiny-raw.json", tmp_path, "snap-tiny")
+    apply.apply(str(out), "first commit")          # succeeds
+    with pytest.raises(RuntimeError):
+        apply.apply(str(out), "nothing to commit")  # no changes -> git commit fails -> raise

@@ -11,8 +11,18 @@ def apply(wiki_root, message):
         _git(root, "init")
         _git(root, "config", "user.name", "Charles Hoskinson")
         _git(root, "config", "user.email", "Charles.Hoskinson@gmail.com")
-    _git(root, "add", "-A")
-    _git(root, "commit", "-m", message)
+    add_result = _git(root, "add", "-A")
+    if add_result.returncode != 0:
+        raise RuntimeError(
+            f"git add failed (exit {add_result.returncode})\n"
+            f"stdout: {add_result.stdout}\nstderr: {add_result.stderr}"
+        )
+    commit_result = _git(root, "commit", "-m", message)
+    if commit_result.returncode != 0:
+        raise RuntimeError(
+            f"git commit failed (exit {commit_result.returncode})\n"
+            f"stdout: {commit_result.stdout}\nstderr: {commit_result.stderr}"
+        )
     return None
 
 def main(argv):
