@@ -1,0 +1,23 @@
+{
+  "directed": true, "multigraph": false, "graph": {},
+  "nodes": [
+    {"id": "proof_outsourcing", "label": "Proof Outsourcing", "norm_label": "proof outsourcing",
+     "community": 1, "file_type": "doc", "source_file": "docs/protocol.md",
+     "source_location": "L10", "source_url": "https://example.org/protocol", "_origin": "ast"},
+    {"id": "verification", "label": "Verification", "norm_label": "verification",
+     "community": 1, "file_type": "doc", "source_file": "docs/protocol.md",
+     "source_location": "L20", "source_url": "https://example.org/protocol", "_origin": "ast"},
+    {"id": "example_prover", "label": "Example Prover", "norm_label": "example prover",
+     "community": 2, "file_type": "doc", "source_file": "docs/prover.md",
+     "source_location": "L5", "source_url": "https://example.org/prover", "_origin": "ast"}
+  ],
+  "links": [
+    {"relation": "requires", "source": "proof_outsourcing", "target": "verification",
+     "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0,
+     "source_file": "docs/protocol.md", "source_location": "L10"},
+    {"relation": "performs", "source": "example_prover", "target": "proof_outsourcing",
+     "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0,
+     "source_file": "docs/prover.md", "source_location": "L5"}
+  ],
+  "hyperedges": []
+}
