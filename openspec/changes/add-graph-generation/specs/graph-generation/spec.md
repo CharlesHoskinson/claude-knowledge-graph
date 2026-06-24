@@ -48,9 +48,16 @@ NetworkX node-link schema the compile pipeline already validates.
 - **AND** because Graphify output is type-less, ontology entity/relation *types* are NOT enforced by this backend (the `llm` backend enforces them); the ontology serves only as loose extraction guidance here
 - **AND** the output is a node-link `graph.json` (top keys `directed/multigraph/graph/nodes/links/hyperedges`)
 
-#### Scenario: LLM backend
+#### Scenario: LLM backend (two-stage, ontology-typed)
 - **WHEN** the `llm` backend is selected
-- **THEN** the skill chunks the source, has the configured model emit strict-JSON node-link records constrained to the ontology, then merges, de-duplicates, and clusters them into one `graph.json`
+- **THEN** the skill chunks the source and, per chunk, runs a two-stage extraction: (1) entities typed to the ontology's `entity_types`, then (2) relations `(source, predicate, target)` over those entities, constrained to the ontology's `relation_types`
+- **AND** it merges and de-duplicates across chunks into one node-link `graph.json` whose nodes and links carry an ontology `type`, so `graph_validate`'s type-coverage checks are enforced (unlike the type-less `graphify` backend)
+- **AND** extraction schemas are flat (non-recursive) and every model response is post-validated with `jsonschema`
+
+#### Scenario: Injectable LLM client, deterministic clustering
+- **WHEN** the `llm` backend runs
+- **THEN** the model is reached through an injectable `complete_json(prompt, schema) -> dict` client (G2 ships an Ollama adapter: non-thinking, temperature 0, schema-constrained `format`), so tests inject a recorded cassette and run offline
+- **AND** integer `community` ids are assigned by a deterministic graph-clustering step (no extra LLM call)
 
 #### Scenario: Backend output is schema-identical
 - **WHEN** either backend completes

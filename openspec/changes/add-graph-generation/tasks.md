@@ -13,13 +13,16 @@
 
 ## 2. G2 — LLM backend and URL acquisition
 
-- [ ] 2.1 Implement the `llm` backend: chunk → strict-JSON node-link extraction constrained by the ontology → merge/dedupe/cluster (record/replay tests; offline)
-- [ ] 2.2 Wire model-selection defaults: local = `qwen2.5-32b-instruct` Q4_K_M (non-thinking, temp 0, JSON `format` + schema-in-prompt; long docs → `qwen3-30b-a3b-instruct-2507`); API = Claude Haiku 4.5 / Sonnet 4.6 via Structured Outputs (strict tool use, thinking OFF, temp 0, flattened schema); enforce non-thinking and post-extraction triple validation in both
-- [ ] 2.3 Implement URL acquisition (Scrapling / `graphify add`) with untrusted-content sanitization (tests; network marker-gated)
-- [ ] 2.4 Backend-parity test: same fixture source + ontology through both backends yields schema-identical, ontology-valid graphs
+- [ ] 2.1 `chunk.py`: deterministic source chunking (size + overlap), unit-tested
+- [ ] 2.2 `llm_client.py`: `complete_json(prompt, schema) -> dict` interface; Ollama adapter (`qwen2.5-32b-instruct`, think=false, temp 0, schema-constrained `format`, schema-in-prompt; long docs → `qwen3-30b-a3b-instruct-2507`) + a cassette/fake client for offline tests; `jsonschema` post-validation of every response
+- [ ] 2.3 `extract.py`: two-stage per-chunk extraction (entities typed to ontology `entity_types`, then relations constrained to `relation_types`) + merge/dedupe across chunks into a typed node-link graph with `source_file`/`source_location` provenance; flat (non-recursive) schemas
+- [ ] 2.4 `cluster.py`: deterministic networkx greedy-modularity community assignment (integer `community` ids); add `networkx` dependency
+- [ ] 2.5 `backends/llm_backend.py`: `LlmBackend(client=...)` implementing `GraphBackend.generate`; assembles chunk → two-stage extract → merge → cluster → validate (node-link + `graph_validate` with types enforced); register `"llm"` in `generate.BACKENDS`
+- [ ] 2.6 URL acquisition in `acquire.py`: classify `"url"`; fetch via `llm-wiki/scripts/scrape.py` → clean markdown into `raw/`; untrusted-content sanitization + provenance (`fetched_at`, `is_verbatim`); offline stub test, live behind a `network` marker
+- [ ] 2.7 End-to-end (offline, cassette): fixture source + ontology → `llm` backend → typed `graph.json` → compile pipeline → `llm-wiki lint` 0 findings
 
-## 3. G3 — Model tuning and extraction evals
+## 3. G3 — Anthropic adapter, parity, and extraction evals
 
-- [ ] 3.1 Extraction-quality eval harness (precision/recall of entities + typed relations vs. a labeled synthetic fixture)
-- [ ] 3.2 Per-backend/model comparison run + recorded metrics; tune quant/context/temperature for the local default
-- [ ] 3.3 Publish-readiness check: confirm no private data in tree or history, then the repo is safe to push
+- [ ] 3.1 Anthropic `complete_json` adapter: Claude Haiku 4.5 / Sonnet 4.6 via Structured Outputs (strict tool use, thinking OFF, temp 0, flattened schema)
+- [ ] 3.2 Cross-provider parity test: same fixture source + ontology through the ollama and anthropic clients (cassettes) → schema-identical, ontology-valid graphs
+- [ ] 3.3 Extraction-quality eval harness (entity + typed-relation precision/recall vs. a labeled synthetic fixture); per-model comparison + tuning (quant/context/temperature for the local default)
