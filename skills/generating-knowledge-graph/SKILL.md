@@ -18,14 +18,14 @@ ships no graphs.
 
 2. **Draft and confirm the ontology.** From the intent plus a sample of the source, write
    `ontology.yaml` (entity_types, relation_types with domain->range, scope). Validate it:
-   `python scripts/ontology.py --ontology ontology.yaml`. Present it for the user to
+   `python ${CLAUDE_SKILL_DIR}/scripts/ontology.py --ontology ontology.yaml`. Present it for the user to
    edit/confirm before extracting.
 
 3. **Acquire the source.** Local files/globs or a directory:
-   `python scripts/acquire.py --inputs <paths-or-dir> --raw raw/ --out manifest.json`.
+   `python ${CLAUDE_SKILL_DIR}/scripts/acquire.py --inputs <paths-or-dir> --raw raw/ --out manifest.json`.
    If the input is already a node-link `graph.json`, skip to step 5 (compile).
 
-4. **Generate the graph.** `python scripts/generate.py --manifest manifest.json
+4. **Generate the graph.** `python ${CLAUDE_SKILL_DIR}/scripts/generate.py --manifest manifest.json
    --ontology ontology.yaml --backend graphify --out graph.json --report report.json`.
    The `graphify` backend wraps the local Graphify extractor (Ollama). Graphify output is
    type-less, so ontology *types* are not enforced by this backend; the report flags
@@ -44,15 +44,15 @@ ships no graphs.
 
 Use this when running inside Claude Code — Claude is the extractor.
 
-1. `python scripts/acquire.py --inputs <files-or-dir> --raw raw/ --out manifest.json`
-2. `python scripts/prep.py --manifest manifest.json --ontology ontology.yaml --out worksheet.json --chunk-size 1200 --overlap 150`
+1. `python ${CLAUDE_SKILL_DIR}/scripts/acquire.py --inputs <files-or-dir> --raw raw/ --out manifest.json`
+2. `python ${CLAUDE_SKILL_DIR}/scripts/prep.py --manifest manifest.json --ontology ontology.yaml --out worksheet.json --chunk-size 1200 --overlap 150`
 3. Read `worksheet.json`. For EACH entry IN ORDER, perform two-stage extraction and append
    TWO objects to `responses.json` (a flat JSON array):
    - first `{"entities": [{"name","type"}, ...]}` — only `entity_types` from the entry, drawn from `text`;
    - then `{"relations": [{"source","predicate","target"}, ...]}` — only `relation_types`, endpoints among the entities you just listed. The `source` and `target` values MUST use the exact `name` strings from the entities you listed in stage 1 of the SAME chunk — mismatched endpoint names are silently dropped.
    The array MUST have exactly two objects per worksheet entry, in worksheet order (the
    backend re-chunks with the same `--chunk-size`/`--overlap`, so order and count must match).
-4. `python scripts/generate.py --manifest manifest.json --ontology ontology.yaml --backend llm --cassette responses.json --chunk-size 1200 --overlap 150 --out graph.json --report report.json`
+4. `python ${CLAUDE_SKILL_DIR}/scripts/generate.py --manifest manifest.json --ontology ontology.yaml --backend llm --cassette responses.json --chunk-size 1200 --overlap 150 --out graph.json --report report.json`
 5. Hand `graph.json` to `compiling-graphify-wiki` (normalize → ledger → compile).
 
 The Ollama adapter (`--backend llm` without `--cassette`) remains the headless fallback.

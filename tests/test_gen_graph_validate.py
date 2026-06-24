@@ -1,5 +1,5 @@
 # tests/test_gen_graph_validate.py
-import json, pathlib, graph_validate, ontology
+import json, pathlib, yaml, graph_validate, ontology
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE = ROOT / "fixtures" / "graph-sample.json"
@@ -41,3 +41,33 @@ def test_unknown_link_type_fails_when_present():
     rep = graph_validate.validate_graph(g, ontology.load_ontology(str(ONT)))
     assert rep["result"] == "fail"
     assert any(f["category"] == "unknown-type" for f in rep["findings"])
+
+
+def test_domain_range_violation_warns_but_passes():
+    # A6: 'defines' is Module->Symbol; a Module->Module 'defines' edge violates range.
+    ont = ontology.load_ontology(str(ONT))
+    src = {"id": "app_module", "label": "app", "type": "Module",
+           "source_file": "doc.md", "source_location": "chunk-0", "community": 0}
+    tgt = {"id": "db_module", "label": "db", "type": "Module",
+           "source_file": "doc.md", "source_location": "chunk-0", "community": 0}
+    g = {"directed": True, "multigraph": False, "graph": {},
+         "nodes": [src, tgt],
+         "links": [{"source": "app_module", "target": "db_module",
+                    "relation": "defines", "type": "defines",
+                    "source_file": "doc.md", "source_location": "chunk-0"}],
+         "hyperedges": []}
+    rep = graph_validate.validate_graph(g, ont)
+    assert any(f["category"] == "relation-domain-range" and f["severity"] == "warning"
+               for f in rep["findings"]), rep["findings"]
+    assert rep["result"] == "warn"   # warning only, never fail
+
+
+def test_empty_graph_warns_but_passes():
+    # A8: an empty (blank-source) graph should warn, not silently pass.
+    ont = ontology.load_ontology(str(ONT))
+    g = {"directed": True, "multigraph": False, "graph": {},
+         "nodes": [], "links": [], "hyperedges": []}
+    rep = graph_validate.validate_graph(g, ont)
+    assert any(f["category"] == "empty-graph" and f["severity"] == "warning"
+               for f in rep["findings"]), rep["findings"]
+    assert rep["result"] == "warn"

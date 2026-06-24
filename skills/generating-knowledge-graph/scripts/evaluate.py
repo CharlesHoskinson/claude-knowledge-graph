@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Score a predicted node-link graph against a labeled gold graph."""
-import argparse, json, sys, pathlib
+import sys, pathlib
+_HERE = pathlib.Path(__file__).resolve().parent
+for _p in (_HERE, _HERE / "backends"):
+    if _p.is_dir() and str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+import argparse, json
 
 def _norm(s):
     return str(s).strip().lower()
