@@ -37,10 +37,24 @@ user actually wants. Graphify can extract graphs locally (Ollama) but does so ge
   flag/config. Both validate against the existing node-link contract.
 - **Node-link is the seam.** Generation's only output contract to downstream is a valid
   node-link `graph.json`; everything in `compiling-graphify-wiki` stays unchanged.
-- **Model selection from research.** A local Ollama default (RTX 5090 32 GB, with quant,
-  context window, and a non-thinking/strict-JSON setting) and an API default (Claude) are
-  chosen from a dedicated, citation-backed model-selection investigation, and wired into the
-  two backends. (Investigation in flight; results fill this section's defaults.)
+- **Model selection (from the citation-backed research, 2026-06-24).** Defaults wired into
+  the `llm` backend:
+  - **Local default:** `qwen2.5-32b-instruct` Q4_K_M on Ollama (the box's
+    `qwen2.5-32b-graphrag` tag is this base + a GraphRAG prompt — verify with
+    `ollama show --modelfile`). Run **non-thinking**, `temperature 0`, with a JSON-schema
+    `format` and the schema also pasted into the prompt. For sources > ~32K tokens, switch
+    to `qwen3-30b-a3b-instruct-2507` (262K context, emits no `<think>` by design). Cap
+    context on the 32 GB card (Q4 at long context can exceed 32 GB VRAM).
+  - **API default:** Claude **Haiku 4.5** for high-volume extraction (Sonnet 4.6 for hard
+    sources / entity resolution), via native **Structured Outputs / strict tool use**, with
+    **extended thinking OFF**, `temperature 0`, and a **flattened (non-recursive)** graph
+    schema.
+  - **Cross-cutting rules (both modes):** thinking/reasoning mode breaks strict JSON —
+    always run non-thinking. Constrained decoding guarantees JSON *shape, not correctness*,
+    so the graph-vs-ontology validator (and triple-level checks) is mandatory regardless of
+    model. Favor **scaffolded/two-stage extraction** (KGGen-style) over picking a bigger
+    model — scaffolding closes most of the quality gap. Full report:
+    `scratchpad/best-llm-kg-extraction.md` (kept out of the repo).
 - **Fixtures are synthetic.** Because graphs are user-generated, the repo ships only
   synthetic node-link + ontology fixtures. `fixtures/graph-real.json` is purged from tree
   and history.

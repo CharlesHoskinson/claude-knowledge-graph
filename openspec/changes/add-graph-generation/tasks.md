@@ -14,7 +14,7 @@
 ## 2. G2 — LLM backend and URL acquisition
 
 - [ ] 2.1 Implement the `llm` backend: chunk → strict-JSON node-link extraction constrained by the ontology → merge/dedupe/cluster (record/replay tests; offline)
-- [ ] 2.2 Wire the model-selection defaults (local Ollama + Claude API) from the research report, including non-thinking/strict-JSON settings
+- [ ] 2.2 Wire model-selection defaults: local = `qwen2.5-32b-instruct` Q4_K_M (non-thinking, temp 0, JSON `format` + schema-in-prompt; long docs → `qwen3-30b-a3b-instruct-2507`); API = Claude Haiku 4.5 / Sonnet 4.6 via Structured Outputs (strict tool use, thinking OFF, temp 0, flattened schema); enforce non-thinking and post-extraction triple validation in both
 - [ ] 2.3 Implement URL acquisition (Scrapling / `graphify add`) with untrusted-content sanitization (tests; network marker-gated)
 - [ ] 2.4 Backend-parity test: same fixture source + ontology through both backends yields schema-identical, ontology-valid graphs
 
