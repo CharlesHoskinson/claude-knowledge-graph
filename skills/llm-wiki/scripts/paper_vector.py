@@ -104,6 +104,10 @@ def paper_slug(paper):
 
 def is_safe_manifest_file(value):
     text = str(value)
+    if "\x00" in text:
+        return False
+    if re.search(r"\.{3,}", text):
+        return False
     if Path(text).is_absolute() or PureWindowsPath(text).is_absolute() or PurePosixPath(text).is_absolute():
         return False
     parts = list(Path(text).parts) + list(PureWindowsPath(text).parts) + list(PurePosixPath(text).parts)

@@ -76,7 +76,13 @@ def _concept_page(snapshot, ledger, node, date, node_titles, source_titles):
     title = node_titles[node["id"]]
     claims = _claims_for(ledger, node["id"])
     neighbors = _neighbors(snapshot, node["id"], node_titles)
-    src_titles = sorted({_src_title(s, source_titles) for s in node.get("source_ids", [])})
+    # Union the node's own source_ids with any source_ids cited by this node's
+    # claims (e.g. edge claims), so declared provenance in `sources:` frontmatter
+    # matches the footnotes those claims render.
+    src_ids = set(node.get("source_ids", []))
+    for c in claims:
+        src_ids.update(c.get("source_ids", []) or [])
+    src_titles = sorted({_src_title(s, source_titles) for s in src_ids})
     fm = {"type": "concept", "aliases": _Inline(node.get("aliases", [])),
           "tags": _Inline(node.get("tags", []) or ["concept"]),
           "created": date, "updated": date, "status": "draft",
@@ -102,8 +108,8 @@ def _source_page(source, date, source_titles):
           "status": "draft", "url": source.get("uri", ""), "source_type": "webpage", "covers": []}
     return title, _fm(fm) + f"# {title}\n\n## Summary\n\nSource `{source['source_id']}` ingested for graphify compilation.\n"
 
-def _map_page(snapshot, comm, date, node_titles):
-    title = _safe(comm["title"])
+def _map_page(snapshot, comm, date, node_titles, comm_title):
+    title = comm_title
     members = [node_titles[n["id"]] for n in snapshot["nodes"] if n["id"] in comm.get("member_node_ids", [])]
     fm = {"type": "map", "tags": ["moc"], "created": date, "updated": date, "status": "draft"}
     body = [f"# {title}\n", "## Members"] + [f"- [[{m}]]" for m in members]
@@ -114,11 +120,60 @@ def _register(index_path, title, desc):
     if f"[[{title}]]" not in text:
         index_path.write_text(text.rstrip() + f"\n- [[{title}]] — {desc}\n", encoding="utf-8")
 
+def _category_count(index_path):
+    """Count registered '- [[...]]' entries in a category _index.md (0 if absent)."""
+    if not index_path.exists():
+        return 0
+    text = index_path.read_text(encoding="utf-8")
+    return sum(1 for line in text.splitlines() if line.lstrip().startswith("- [["))
+
+def _update_root_index(root):
+    """Rewrite the root index.md router so each category line shows its real count
+    (the number of pages registered in that category's _index.md)."""
+    index_path = root / "index.md"
+    if not index_path.exists():
+        return
+    lines = index_path.read_text(encoding="utf-8").splitlines()
+    # router lines look like: "- [[<cat>/_index|<cat>]] (N)"
+    pat = re.compile(r"^(- \[\[(?P<cat>[^/\]]+)/_index\|[^\]]+\]\]) \(\d+\)\s*$")
+    out = []
+    for line in lines:
+        m = pat.match(line)
+        if m:
+            cat = m.group("cat")
+            count = _category_count(root / "wiki" / cat / "_index.md")
+            out.append(f"{m.group(1)} ({count})")
+        else:
+            out.append(line)
+    index_path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+def _global_titles(snapshot):
+    """Build ONE disambiguation namespace across every page title (concepts,
+    sources, and community/map pages) so no two pages across categories fold to
+    the same stem (which would make [[stem]] links ambiguous — llm-wiki resolves
+    links by global lowercased stem). Keys are prefixed to keep node/source/map
+    ids distinct, then unprefixed back into per-category id->title maps."""
+    pairs = []
+    for n in snapshot["nodes"]:
+        pairs.append((f"n:{n['id']}", n["title"]))
+    for s in snapshot["sources"]:
+        pairs.append((f"s:{s['source_id']}", s.get("title") or s["source_id"]))
+    for c in snapshot["communities"]:
+        pairs.append((f"c:{c['id']}", c["title"]))
+    combined = _unique_titles(pairs)
+    node_titles, source_titles, comm_titles = {}, {}, {}
+    for n in snapshot["nodes"]:
+        node_titles[n["id"]] = combined[f"n:{n['id']}"]
+    for s in snapshot["sources"]:
+        source_titles[s["source_id"]] = combined[f"s:{s['source_id']}"]
+    for c in snapshot["communities"]:
+        comm_titles[c["id"]] = combined[f"c:{c['id']}"]
+    return node_titles, source_titles, comm_titles
+
 def compile_wiki(snapshot, ledger, out_root, date):
     scaffold.scaffold(out_root, "compiled from a Graphify graph", date)
     root = pathlib.Path(out_root)
-    node_titles = _unique_titles([(n["id"], n["title"]) for n in snapshot["nodes"]])
-    source_titles = _unique_titles([(s["source_id"], s.get("title") or s["source_id"]) for s in snapshot["sources"]])
+    node_titles, source_titles, comm_titles = _global_titles(snapshot)
     for s in snapshot["sources"]:
         title, text = _source_page(s, date, source_titles)
         (root / "wiki" / "sources" / f"{title}.md").write_text(text, encoding="utf-8")
@@ -128,8 +183,9 @@ def compile_wiki(snapshot, ledger, out_root, date):
         (root / "wiki" / "concepts" / f"{title}.md").write_text(text, encoding="utf-8")
         _register(root / "wiki" / "concepts" / "_index.md", title, title)
     for comm in snapshot["communities"]:
-        title, text = _map_page(snapshot, comm, date, node_titles)
+        title, text = _map_page(snapshot, comm, date, node_titles, comm_titles[comm["id"]])
         (root / "wiki" / "maps" / f"{title}.md").write_text(text, encoding="utf-8")
+    _update_root_index(root)
     return None
 
 def main(argv):

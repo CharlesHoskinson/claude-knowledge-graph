@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Structural validation + llm-wiki lint gate for a compiled wiki."""
-import argparse, json, sys, re, subprocess, pathlib, yaml
+import argparse, json, sys, subprocess, pathlib, yaml
 
 SCAFFOLD = {"_index", "index", "overview", "log"}
 
@@ -32,11 +32,14 @@ def _structural(wiki_root, ledger):
     return findings
 
 def _lint(wiki_root, lint_path):
+    # The lint script's exit code is authoritative: nonzero => findings (or the
+    # lint itself errored). Trusting a parsed "(N) finding" count over the return
+    # code silently passes a crashed/erroring lint, and discards stderr.
     proc = subprocess.run([sys.executable, lint_path, wiki_root], capture_output=True, text=True)
-    m = re.search(r"(\d+)\s+finding", proc.stdout)
-    count = int(m.group(1)) if m else (0 if proc.returncode == 0 else 1)
-    if count:
-        return [{"severity": "error", "category": "llm-wiki-lint", "message": proc.stdout.strip()[-2000:]}]
+    if proc.returncode != 0:
+        detail = (proc.stdout + ("\n" + proc.stderr if proc.stderr else "")).strip()
+        return [{"severity": "error", "category": "llm-wiki-lint",
+                 "message": detail[-2000:]}]
     return []
 
 def validate(wiki_root, ledger, lint_path):

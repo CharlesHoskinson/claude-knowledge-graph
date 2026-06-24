@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Classify inputs and stage local files/directories into a raw/ workspace."""
-import argparse, json, sys, pathlib, glob, shutil, subprocess
+import sys, pathlib
+_HERE = pathlib.Path(__file__).resolve().parent
+for _p in (_HERE, _HERE / "backends"):
+    if _p.is_dir() and str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+import argparse, json, glob, shutil, subprocess
 
 _LLM_WIKI_SCRAPE = pathlib.Path(__file__).resolve().parents[2] / "llm-wiki" / "scripts" / "scrape.py"
 
@@ -54,19 +59,41 @@ def _scrape_fetcher(url, raw_dir):
     after = {p.name for p in rawp.glob("*")}
     return _pick_markdown(after - before)
 
+def _disambiguate(rel, used, seq):
+    """Return a staged-path unique within `used`. On collision, prefix a zero-padded
+    source index so distinct inputs sharing a basename never overwrite (fix A2)."""
+    if rel not in used:
+        return rel
+    p = pathlib.PurePosixPath(rel)
+    parent = p.parent.as_posix()
+    candidate = f"{seq:04d}-{p.name}"
+    rel2 = candidate if parent == "." else f"{parent}/{candidate}"
+    # extremely unlikely, but guarantee uniqueness even if the prefixed name collides
+    while rel2 in used:
+        seq += 1
+        candidate = f"{seq:04d}-{p.name}"
+        rel2 = candidate if parent == "." else f"{parent}/{candidate}"
+    return rel2
+
 def acquire(inputs, raw_dir, fetcher=None):
     raw = pathlib.Path(raw_dir)
     raw.mkdir(parents=True, exist_ok=True)
     fetch = fetcher or _scrape_fetcher
     files = []
+    used = set()
+    seq = 0
     for item in inputs:
         if classify_input(item) == "url":
             rel = fetch(item, str(raw))
+            used.add(rel)
             size = (raw / rel).stat().st_size
             files.append({"path": rel, "bytes": size, "source": "url", "url": item})
             continue
         for base, f in _iter_files([item]):
             rel = f.relative_to(base).as_posix() if base in f.parents else f.name
+            seq += 1
+            rel = _disambiguate(rel, used, seq)
+            used.add(rel)
             dest = raw / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(f, dest)

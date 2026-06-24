@@ -109,6 +109,19 @@ def test_build_frontmatter():
     assert r'title: "C:\\Users\\name"' in fm3
 
 
+def test_build_frontmatter_quotes_yaml_special_leading_chars():
+    """Values starting with YAML-special chars must be quoted so yaml.safe_load accepts them (C4 fix)."""
+    import yaml
+    for special_title in ("@anthropic", "%TAG", "`backtick", "!bang", "&anchor", "*alias", "?key", "|literal", ">folded"):
+        fm = scrape.build_frontmatter({"title": special_title})
+        # Extract just the YAML body between the --- delimiters for parsing
+        inner = fm.split("---", 2)[1]  # text between first and second ---
+        parsed = yaml.safe_load(inner)
+        assert parsed is not None and parsed.get("title") == special_title, (
+            f"title={special_title!r} did not round-trip; got {parsed.get('title') if parsed else None!r}\nfm:\n{fm}"
+        )
+
+
 def test_already_ingested():
     ai = scrape.already_ingested
     existing = [{"url": "https://example.com/a", "canonical_url": "https://example.com/a", "content_hash": "abc"}]

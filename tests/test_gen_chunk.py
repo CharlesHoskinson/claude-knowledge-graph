@@ -1,5 +1,14 @@
 # tests/test_gen_chunk.py
+import pytest
 import chunk as chunker
+
+
+def test_overlap_ge_size_raises():
+    # A7: overlap >= size would blow up into near-duplicate windows; reject it.
+    with pytest.raises(ValueError):
+        chunker.chunk_text("abcdef" * 50, size=100, overlap=100)
+    with pytest.raises(ValueError):
+        chunker.chunk_text("abcdef" * 50, size=100, overlap=150)
 
 def test_short_text_is_one_chunk():
     assert chunker.chunk_text("hello world", size=1200, overlap=150) == ["hello world"]

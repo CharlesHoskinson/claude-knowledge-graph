@@ -5,6 +5,10 @@ import node_link
 
 def validate_graph(graph, ontology):
     findings = list(node_link.validate_node_link(graph))   # node-link errors first
+    # empty graph (warn) — a blank source yields no nodes; flag it rather than silently pass
+    if not graph.get("nodes"):
+        findings.append({"severity": "warning", "category": "empty-graph",
+                         "message": "graph has no nodes (empty/blank source?)", "path": "nodes"})
     # provenance (warn)
     for i, n in enumerate(graph.get("nodes", [])):
         if not n.get("source_file") or not n.get("source_location"):
@@ -30,6 +34,20 @@ def validate_graph(graph, ontology):
         if link["type"] not in relation_names:
             findings.append({"severity": "error", "category": "unknown-type",
                              "message": f"link type '{link['type']}' not in ontology relation_types",
+                             "path": "links"})
+    # domain/range conformance (warn) — declared relation endpoints must match node types
+    node_type = {n.get("id"): n.get("type") for n in graph.get("nodes", [])}
+    rel_dr = {r["name"]: (r.get("domain"), r.get("range")) for r in ontology.get("relation_types", [])}
+    for link in typed_links:
+        if link["type"] not in rel_dr:
+            continue
+        domain, range_ = rel_dr[link["type"]]
+        s_type, t_type = node_type.get(link.get("source")), node_type.get(link.get("target"))
+        if (s_type is not None and domain is not None and s_type != domain) or \
+           (t_type is not None and range_ is not None and t_type != range_):
+            findings.append({"severity": "warning", "category": "relation-domain-range",
+                             "message": (f"link '{link['type']}' expects {domain}->{range_} but "
+                                         f"connects {s_type}->{t_type}"),
                              "path": "links"})
     sev = {f["severity"] for f in findings}
     result = "fail" if "error" in sev else ("warn" if "warning" in sev else "pass")

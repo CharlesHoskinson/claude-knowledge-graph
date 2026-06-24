@@ -2,6 +2,8 @@
 """Deterministic character-window chunking with overlap."""
 
 def chunk_text(text, size=1200, overlap=150):
+    if not (0 <= overlap < size):
+        raise ValueError(f"overlap must satisfy 0 <= overlap < size, got overlap={overlap}, size={size}")
     text = text.strip()
     if not text:
         return []

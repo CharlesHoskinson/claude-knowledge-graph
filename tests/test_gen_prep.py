@@ -18,6 +18,10 @@ def test_worksheet_one_entry_per_chunk_with_prompts(tmp_path):
     assert e["relation_types"] == ["imports", "defines"]
     assert "app imports db" in e["text"]
     assert "JSON" in e["entity_prompt"]                   # extract.entity_prompt content
+    # A5: the worksheet prompt must carry each entity type's description, not just names,
+    # and frame the task to include abstract concepts (not only proper nouns).
+    assert "A source-code module or document unit." in e["entity_prompt"]
+    assert "abstract concepts" in e["entity_prompt"]
 
 def test_worksheet_aligns_with_backend_chunk_count(tmp_path):
     # the number of worksheet entries must equal the backend's chunk count for the file

@@ -30,6 +30,21 @@ def test_two_stage_extract_builds_typed_graph_and_filters_to_ontology():
     assert link["source"] == "app_module" and link["target"] == "config_symbol"
     assert link["relation"] == "defines" and link["type"] == "defines"
 
+def test_extract_reports_relation_drops_with_reasons():
+    # A1: dropped relations must be surfaced (counts per reason + small sample)
+    cass = llm_client.CassetteClient([
+        {"entities": [{"name": "app", "type": "Module"}, {"name": "config", "type": "Symbol"}]},
+        {"relations": [{"source": "app", "predicate": "frobnicates", "target": "config"},  # unknown_predicate
+                       {"source": "ghost", "predicate": "imports", "target": "app"},        # unresolved_source
+                       {"source": "app", "predicate": "imports", "target": "ghost"}]},      # unresolved_target
+    ])
+    g = extract.extract_graph("some text", ONT, cass, source_file="doc.md", chunk_size=10000)
+    rd = g["relation_drops"]
+    assert rd["total"] == 3
+    assert rd["by_reason"] == {"unknown_predicate": 1, "unresolved_source": 1, "unresolved_target": 1}
+    assert len(rd["sample"]) == 3
+    assert {s["reason"] for s in rd["sample"]} == {"unknown_predicate", "unresolved_source", "unresolved_target"}
+
 def test_entities_deduped_across_chunks():
     cass = llm_client.CassetteClient([
         {"entities": [{"name": "app", "type": "Module"}]},          # chunk 0 entities

@@ -79,6 +79,23 @@ def test_validate_manifest_rejects_unsafe_file_paths():
                 raise AssertionError(f"validate_manifest should reject {bad}")
 
 
+def test_is_safe_manifest_file_rejects_nul_byte():
+    """NUL byte in path must be rejected (C3 fix)."""
+    assert paper_vector.is_safe_manifest_file("papers\x00evil.pdf") is False
+
+
+def test_is_safe_manifest_file_rejects_dotdotdot():
+    """3+ consecutive dots must be rejected (C3 fix)."""
+    assert paper_vector.is_safe_manifest_file("....//x.pdf") is False
+    assert paper_vector.is_safe_manifest_file("...x.pdf") is False
+
+
+def test_is_safe_manifest_file_accepts_normal():
+    """Normal relative paths must still be accepted (C3 fix, no regression)."""
+    assert paper_vector.is_safe_manifest_file("papers/paper.pdf") is True
+    assert paper_vector.is_safe_manifest_file("paper.pdf") is True
+
+
 def test_validate_manifest_rejects_duplicate_slugs():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "manifest.json")

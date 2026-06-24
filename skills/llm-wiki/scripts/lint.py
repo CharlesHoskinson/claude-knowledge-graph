@@ -16,7 +16,7 @@ def _has_frontmatter(text):
 
 def _ftype(text):
     if not _has_frontmatter(text): return None
-    fm = text[3:text.index("\n---", 3)]
+    fm = text[3:text.index("\n---", 3)].replace("\r", "")
     m = re.search(r"^type:\s*(\S+)", fm, re.M)
     return m.group(1) if m else None
 
@@ -27,9 +27,11 @@ def lint(root):
     stems = {p.stem.lower() for p in pages}
     inbound = {p.stem.lower(): 0 for p in pages}
     findings = {"broken_links": [], "orphans": [], "missing_frontmatter": [], "unsourced_claims": []}
+    ftype_cache = {}  # C2: cache ftype per path to avoid re-reading in orphan pass
     for p in pages:
         text = p.read_text(encoding="utf-8")
         ftype = _ftype(text)
+        ftype_cache[p] = ftype
         # index/_index/overview/log are navigation scaffolding: exempt them from the
         # frontmatter and broken-link checks, but still count their outbound links.
         is_scaffold = p.stem.lower() in SKIP_STEMS
@@ -48,7 +50,7 @@ def lint(root):
                 if s.startswith("- ") and "^[" not in s and "[[" not in s and "<!--" not in s:
                     findings["unsourced_claims"].append((str(p), s[:60]))
     for p in pages:
-        if p.stem.lower() in SKIP_STEMS or _ftype(p.read_text(encoding="utf-8")) == "map":
+        if p.stem.lower() in SKIP_STEMS or ftype_cache.get(p) == "map":
             continue
         if inbound.get(p.stem.lower(), 0) == 0:
             findings["orphans"].append((str(p), p.stem))

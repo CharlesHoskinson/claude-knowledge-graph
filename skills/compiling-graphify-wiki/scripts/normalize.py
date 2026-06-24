@@ -41,12 +41,12 @@ def _edges(raw_links):
         })
     return out
 
-def _sources(raw_nodes):
+def _sources(raw_nodes, raw_links=()):
     seen = {}
-    for n in raw_nodes:
-        sf = n.get("source_file")
+    for item in list(raw_nodes) + list(raw_links):
+        sf = item.get("source_file")
         if sf and sf not in seen:
-            seen[sf] = {"source_id": sf, "title": _source_title(sf), "uri": n.get("source_url") or ""}
+            seen[sf] = {"source_id": sf, "title": _source_title(sf), "uri": item.get("source_url") or ""}
     return list(seen.values())
 
 def _communities(raw_nodes):
@@ -70,7 +70,7 @@ def normalize(raw, snapshot_id, created_at):
         "created_at": created_at,
         "nodes": _nodes(nodes),
         "edges": _edges(links),
-        "sources": _sources(nodes),
+        "sources": _sources(nodes, links),
         "communities": _communities(nodes),
     }
 

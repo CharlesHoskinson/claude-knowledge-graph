@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Load and validate ontology.yaml (the extraction + validation contract)."""
-import argparse, json, sys, pathlib, yaml, jsonschema
+import sys, pathlib
+_HERE = pathlib.Path(__file__).resolve().parent
+for _p in (_HERE, _HERE / "backends"):
+    if _p.is_dir() and str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+import argparse, json, yaml, jsonschema
 
 _SCHEMA = pathlib.Path(__file__).resolve().parent.parent / "schemas" / "ontology.schema.json"
 
