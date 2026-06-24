@@ -3,5 +3,5 @@
   "version": "0.1.0",
   "description": "Graphify knowledge-graph tooling, the llm-wiki skill, and the compiling-graphify-wiki bridge that compiles a graph export into an llm-wiki-format wiki.",
   "author": "Charles Hoskinson",
-  "skills": ["./skills/llm-wiki", "./skills/compiling-graphify-wiki"]
+  "skills": ["./skills/llm-wiki", "./skills/compiling-graphify-wiki", "./skills/generating-knowledge-graph"]
 }
