@@ -1,147 +1,22 @@
 {
-  "directed": false,
-  "multigraph": false,
-  "graph": {},
+  "directed": true, "multigraph": false, "graph": {},
   "nodes": [
-    {
-      "id": "alpha",
-      "label": "Alpha",
-      "norm_label": "alpha",
-      "community": 1,
-      "file_type": "doc",
-      "source_file": "src/module_a.md",
-      "source_location": "L1",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "beta",
-      "label": "Beta",
-      "norm_label": "beta",
-      "community": 1,
-      "file_type": "doc",
-      "source_file": "src/module_a.md",
-      "source_location": "L2",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "gamma",
-      "label": "Gamma",
-      "norm_label": "gamma",
-      "community": 1,
-      "file_type": "doc",
-      "source_file": "src/module_a.md",
-      "source_location": "L3",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "config_a",
-      "label": "config",
-      "norm_label": "config",
-      "community": 2,
-      "file_type": "code",
-      "source_file": "src/module_a.md",
-      "source_location": "L10",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "config_b",
-      "label": "config",
-      "norm_label": "config",
-      "community": 2,
-      "file_type": "code",
-      "source_file": "src/module_b.md",
-      "source_location": "L5",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "config_c",
-      "label": "config",
-      "norm_label": "config",
-      "community": 3,
-      "file_type": "code",
-      "source_file": "src/module_b.md",
-      "source_location": "L8",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "delta",
-      "label": "Delta",
-      "norm_label": "delta",
-      "community": 2,
-      "file_type": "doc",
-      "source_file": "src/module_b.md",
-      "source_location": "L15",
-      "source_url": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "epsilon",
-      "label": "Epsilon",
-      "norm_label": "epsilon",
-      "community": 3,
-      "file_type": "doc",
-      "source_file": "src/module_b.md",
-      "source_location": "L20",
-      "source_url": "",
-      "_origin": "ast"
-    }
+    {"id": "app",        "label": "app",     "norm_label": "app",     "community": 0, "file_type": "doc", "source_file": "docs/notes.md", "source_location": "L1",  "source_url": ""},
+    {"id": "app_config", "label": "config",  "norm_label": "config",  "community": 0, "file_type": "doc", "source_file": "docs/notes.md", "source_location": "L2",  "source_url": ""},
+    {"id": "db",         "label": "db",      "norm_label": "db",      "community": 1, "file_type": "doc", "source_file": "docs/notes.md", "source_location": "L5",  "source_url": ""},
+    {"id": "db_config",  "label": "config",  "norm_label": "config",  "community": 1, "file_type": "doc", "source_file": "docs/notes.md", "source_location": "L6",  "source_url": ""},
+    {"id": "db_connect", "label": "connect", "norm_label": "connect", "community": 1, "file_type": "doc", "source_file": "docs/notes.md", "source_location": "L7",  "source_url": ""},
+    {"id": "api",        "label": "api",     "norm_label": "api",     "community": 2, "file_type": "doc", "source_file": "docs/api.md",   "source_location": "L1",  "source_url": "https://example.org/api"},
+    {"id": "api_router", "label": "router",  "norm_label": "router",  "community": 2, "file_type": "doc", "source_file": "docs/api.md",   "source_location": "L3",  "source_url": "https://example.org/api"},
+    {"id": "api_config", "label": "config",  "norm_label": "config",  "community": 2, "file_type": "doc", "source_file": "docs/api.md",   "source_location": "L9",  "source_url": "https://example.org/api"}
   ],
   "links": [
-    {
-      "source": "alpha",
-      "target": "beta",
-      "relation": "requires",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "weight": 1.0,
-      "source_file": "src/module_a.md",
-      "source_location": "L1"
-    },
-    {
-      "source": "beta",
-      "target": "config_a",
-      "relation": "uses",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "weight": 1.0,
-      "source_file": "src/module_a.md",
-      "source_location": "L2"
-    },
-    {
-      "source": "gamma",
-      "target": "config_b",
-      "relation": "uses",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "weight": 1.0,
-      "source_file": "src/module_b.md",
-      "source_location": "L5"
-    },
-    {
-      "source": "delta",
-      "target": "config_c",
-      "relation": "extends",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "weight": 1.0,
-      "source_file": "src/module_b.md",
-      "source_location": "L15"
-    },
-    {
-      "source": "epsilon",
-      "target": "delta",
-      "relation": "related-to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.8,
-      "weight": 0.8,
-      "source_file": "src/module_b.md",
-      "source_location": "L20"
-    }
-  ]
+    {"relation": "imports", "source": "app", "target": "db",         "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/notes.md", "source_location": "L1"},
+    {"relation": "defines", "source": "app", "target": "app_config", "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/notes.md", "source_location": "L2"},
+    {"relation": "defines", "source": "db",  "target": "db_config",  "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/notes.md", "source_location": "L6"},
+    {"relation": "defines", "source": "db",  "target": "db_connect", "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/notes.md", "source_location": "L7"},
+    {"relation": "defines", "source": "api", "target": "api_router", "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/api.md",   "source_location": "L3"},
+    {"relation": "defines", "source": "api", "target": "api_config", "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0, "source_file": "docs/api.md",   "source_location": "L9"}
+  ],
+  "hyperedges": []
 }
